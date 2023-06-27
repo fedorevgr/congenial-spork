@@ -4,7 +4,7 @@ from ffmpeg.downloader import YTDLSource
 
 
 class Interface(Queue):
-    async def addSong(self, name: str, url: str, duration: 0, systemName: str):
+    def addSong(self, name: str, url: str, duration: 0, systemName: str):
         self.append(Song(name=name, url=url, duration=duration, systemName=systemName))
 
     async def deleteSong(self, name: str):
@@ -12,10 +12,11 @@ class Interface(Queue):
 
     async def skipSong(self):
         self.pop(0)
-        # play next
 
     async def previousSong(self):
         pass
 
+
     def get(self):
-        return "\n".join(f"{i+1}. {song.name}" for i, song in enumerate(self))
+        return "\n".join(f'{i+1} - "{song.name.capitalize()}" ({song.duration//60}:{song.duration%60})'
+                         for i, song in enumerate(self))

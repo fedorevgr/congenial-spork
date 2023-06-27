@@ -36,18 +36,18 @@ async def play(message: discord.Message, *args: str):
     global songQueue
     global logger
 
+    repeat = 0
     if args[-1].startswith("repeat="):
-        args, repeat = args[:-1], int(args[-1][8:])
+        args, repeat = args[:-1], int(args[-1][7:])
     elif args[-1].startswith("r="):
-        args, repeat = args[:-1], int(args[-1][3:])
-
+        args, repeat = args[:-1], int(args[-1][2:])
     songName = " ".join(args)
-    logger.info(f"Received to play {songName}")
+    logger.info(f'Received to play "{songName}", {repeat+1} times')
 
     if not bot.voice_clients:
         await join(message)
 
-    await player.play(url=songName,  client=bot, voice_client=voiceClient, Queue=songQueue, log=logger)
+    await player.play(url=songName,  client=bot, voice_client=voiceClient, Queue=songQueue)
 
 
 @bot.command()
@@ -68,7 +68,10 @@ async def skip(message):
 @bot.command()
 async def queue(message: discord.Message):
     global songQueue
-    await message.channel.send(content=songQueue.get())
+    if songQueue:
+        await message.channel.send(content=songQueue.get())
+    else:
+        await message.channel.send("Очередь пуста")
 
 
 
