@@ -17,7 +17,7 @@ if __name__ == "__main__":
         mainLogger.info("Activated venv")
     else:
         mainLogger.info(f"venv is active. {sys.platform}")
-    for elem in commands.values():
+    for elem in libs.values():
         os.system(f"pip install {elem}")
     mainLogger.info("Everything should work")
 
