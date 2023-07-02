@@ -28,16 +28,16 @@ async def play(
     logger.info(f'Downloaded file - {filename}')
 
     for _ in range(repeat+1):
-        Queue.addSong(name=name, url=url, duration=getDuration(url), systemName=filename)
+        await Queue.addSong(name=name, url=url, duration=getDuration(url), systemName=filename)
 
     logger.info(f'Song "{name}" is added to queue.')
 
-    if len(Queue) > 1:
+    if Queue.qsize() != 0:
         logger.info(f"Song is added to the queue, but not played yet\nQueue:\n{Queue.get()}")
         return
 
     while Queue:
-        elem = Queue[0]
+        elem = Queue.get()
         logger.info(f"Now playing - {elem.name}\n{elem.path}\n{Queue.get()}")
         filename = elem.path
         file = (discord.FFmpegPCMAudio(executable="ffmpeg/ffmpeg.exe", source=filename))
@@ -47,8 +47,7 @@ async def play(
             await asyncio.sleep(1)
             if not voice_client.is_playing():
                 break
-        await Queue.skipSong()
-        logger.info(f"Ended - {elem.name}\n{Queue.get()}")
+        logger.info(f"Ended - {elem.name}\n{Queue.getInfo()}")
 
     logger.info("Queue ended")
 
