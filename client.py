@@ -6,6 +6,7 @@ import platform
 import ffmpeg.player as player
 import os
 from database.Interfaces import queue
+from ffmpeg.audioManager import clearCache
 
 
 logger = logging.getLogger("discord")
@@ -22,6 +23,7 @@ async def on_ready():
     logger.info(f"Python version: {platform.python_version()}")
     logger.info(f"Running on: {platform.system()} {platform.release()} ({os.name})")
     logger.info("-------------------")
+    clearCache()
 
 
 @bot.command()

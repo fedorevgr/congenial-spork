@@ -33,7 +33,8 @@ async def play(
             Queue.addSong(name=name, url=url, duration=getDuration(url), systemName=filename)
 
         logger.info(f'Song "{name}" is added to queue.')
-        await msg.channel.send(f"Добавил die Musik -------  {name} ------- {url}")
+        message = f"Добавил die Musik -------  {name} {Queue[0].duration // 60}:{Queue[0].duration % 60} ------- {url}"
+        await msg.channel.send(message)
 
         if len(Queue) > 1:
             logger.info(f"Song is added to the queue, but not played yet\nQueue:\n{Queue.get()}")
@@ -45,6 +46,9 @@ async def play(
         filename = elem.path
         file = (discord.FFmpegPCMAudio(executable="ffmpeg/ffmpeg.exe", source=filename))
         voice_client.play(file)
+
+        message = f"Сейчас играет -------  {name} {Queue[0].duration // 60}:{Queue[0].duration % 60} ------- {url}"
+        await msg.channel.send(message)
 
         while True:
             await asyncio.sleep(1)
