@@ -15,29 +15,32 @@ async def play(
         client: discord.Client,
         voice_client: discord.VoiceClient,
         Queue: queue.Interface,
+        msg: discord.Message,
         repeat=0
         ):
-    if not url.startswith("https"):
-        name = url
-        url, name = getUrl(url), getName(url)
-    else:
-        name = getName(url)
+    async with msg.channel.typing():
+        if not url.startswith("https"):
+            name = url
+            url, name = getUrl(url), getName(url)
+        else:
+            name = getName(url)
 
-    filename = await downloader.YTDLSource.from_url(url=url, loop=client.loop)
-    # file downloaded put in queue
-    logger.info(f'Downloaded file - {filename}')
+        filename = await downloader.YTDLSource.from_url(url=url, loop=client.loop)
+        # file downloaded put in queue
+        logger.info(f'Downloaded file - {filename}')
 
-    for _ in range(repeat+1):
-        await Queue.addSong(name=name, url=url, duration=getDuration(url), systemName=filename)
+        for _ in range(repeat+1):
+            Queue.addSong(name=name, url=url, duration=getDuration(url), systemName=filename)
 
-    logger.info(f'Song "{name}" is added to queue.')
+        logger.info(f'Song "{name}" is added to queue.')
+        await msg.channel.send(f"Добавил die Musik -------  {name} ------- {url}")
 
-    if Queue.qsize() != 0:
-        logger.info(f"Song is added to the queue, but not played yet\nQueue:\n{Queue.get()}")
-        return
+        if len(Queue) > 1:
+            logger.info(f"Song is added to the queue, but not played yet\nQueue:\n{Queue.get()}")
+            return
 
     while Queue:
-        elem = Queue.get()
+        elem = Queue[0]
         logger.info(f"Now playing - {elem.name}\n{elem.path}\n{Queue.get()}")
         filename = elem.path
         file = (discord.FFmpegPCMAudio(executable="ffmpeg/ffmpeg.exe", source=filename))
@@ -47,7 +50,9 @@ async def play(
             await asyncio.sleep(1)
             if not voice_client.is_playing():
                 break
-        logger.info(f"Ended - {elem.name}\n{Queue.getInfo()}")
+
+        await Queue.skipSong()
+        logger.info(f"Ended - {elem.name}\n{Queue.get()}")
 
     logger.info("Queue ended")
 

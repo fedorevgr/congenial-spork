@@ -35,19 +35,19 @@ async def play(message: discord.Message, *args: str):
     global voiceClient
     global songQueue
     global logger
+    async with message.channel.typing():
+        repeat = 0
+        if args[-1].startswith("repeat="):
+            args, repeat = args[:-1], int(args[-1][7:])
+        elif args[-1].startswith("r="):
+            args, repeat = args[:-1], int(args[-1][2:])
+        songName = " ".join(args)
+        logger.info(f'Received to play "{songName}", {repeat+1} times')
 
-    repeat = 0
-    if args[-1].startswith("repeat="):
-        args, repeat = args[:-1], int(args[-1][7:])
-    elif args[-1].startswith("r="):
-        args, repeat = args[:-1], int(args[-1][2:])
-    songName = " ".join(args)
-    logger.info(f'Received to play "{songName}", {repeat+1} times')
+        if not bot.voice_clients:
+            await join(message)
 
-    if not bot.voice_clients:
-        await join(message)
-
-    await player.play(url=songName,  client=bot, voice_client=voiceClient, Queue=songQueue)
+    await player.play(url=songName,  client=bot, voice_client=voiceClient, Queue=songQueue, msg=message)
 
 
 @bot.command()

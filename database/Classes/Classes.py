@@ -1,6 +1,3 @@
-from asyncio import Queue
-
-
 class Song:
     def __init__(self, name: str, duration: int, url: str, systemName: str):
         self.name = name
@@ -9,8 +6,8 @@ class Song:
         self.path = systemName
 
 
-#class Queue(list[Song]):
-#    pass
+class Queue(list[Song]):
+    pass
 
 
 class Playlist(list[Song]):
