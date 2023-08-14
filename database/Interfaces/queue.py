@@ -16,6 +16,16 @@ class Interface(Queue):
     async def previousSong(self):
         pass
 
-    def get(self):
-        return "\n".join(f'{i+1} - "{song.name.capitalize()}" ({song.duration//60}:{song.duration%60})'
+    def getSTR(self):
+        return "\n".join(
+            f'{i+1} - "{song.name.capitalize()}" ({song.duration//60}:{str(song.duration%60).rjust(2, "0")})'
                          for i, song in enumerate(self))
+
+    def get(self):
+        return [
+            {
+                "pos":i+1,
+                "name": song.name.capitalize(),
+                "dur": f"{song.duration//60}:{str(song.duration%60).rjust(2, '0')}"}
+            for i, song in enumerate(self)
+        ]

@@ -70,11 +70,17 @@ async def skip(message):
 @bot.command()
 async def queue(message: discord.Message):
     global songQueue
+    embed = discord.Embed(colour=discord.Colour.random(), title="Очередь пуста")
     if songQueue:
-        await message.channel.send(content=songQueue.get())
-    else:
-        await message.channel.send("Очередь пуста")
+        content, embed = songQueue.get(), discord.Embed(colour=discord.Colour.random(), title="Очередь:")
+        for song in content[:10]:
+            embed.add_field(name=f'{song["pos"]}.', value=f"{song['name']} ({song['dur']})")
+    await message.channel.send(embed=embed)
 
+
+@bot.command()
+async def pause(message):
+    voiceClient.pause()
 
 
 bot.run(token=TOKEN, reconnect=True)
