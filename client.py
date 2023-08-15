@@ -85,7 +85,5 @@ async def pause(message: discord.Message):
         logger.info("Resumed song.")
 
 
-
-
 bot.run(token=TOKEN, reconnect=True)
 
