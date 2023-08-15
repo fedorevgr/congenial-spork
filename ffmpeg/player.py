@@ -5,15 +5,12 @@ from database.Interfaces import queue
 import asyncio
 import tools.tools as computations
 import tools.messagesService as systemMessages
+from ffmpeg.TimerService import Timer
+from tools.info import ffmpegEXEpath
 
 
 logger = logging.getLogger("discord")
-is_paused = False
-
-
-def changePause():
-    global is_paused
-    is_paused = not is_paused
+timer = Timer()
 
 
 async def play(
@@ -24,6 +21,7 @@ async def play(
         msg: discord.Message,
         repeat=0
         ):
+    global timer
     async with msg.channel.typing():
         name, url = computations.assignNameUrl(urloname)
 
@@ -44,15 +42,12 @@ async def play(
 
         logger.info(f"Now playing - {elem.name}\n{elem.path}\n{Queue.getSTR()}")
 
-        file = (discord.FFmpegPCMAudio(executable="ffmpeg/ffmpeg.exe", source=elem.path))
+        file = (discord.FFmpegPCMAudio(executable=ffmpegEXEpath, source=elem.path))
         voice_client.play(file)
 
         await systemMessages.onCurrSong(msg=msg, elem=elem)
 
-        while True:
-            await asyncio.sleep(1)
-            if not voice_client.is_playing():
-                break
+        await timer.startTimer(elem.duration)
 
         await Queue.skipSong()
         logger.info(f"Ended - {elem.name}\n{Queue.getSTR()}")

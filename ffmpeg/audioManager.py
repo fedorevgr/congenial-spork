@@ -8,9 +8,9 @@ logger = logging.getLogger("discord")
 
 
 def clearCache():
-    listOfFiles = os.listdir(path="ffmpeg/audio")
+    listOfFiles = os.listdir(path='/'.join(os.getcwd().split('\\')) + '/ffmpeg/audio')
     for soundtrack in listOfFiles:
-        if time() - os.path.getctime(f"ffmpeg/audio/{soundtrack}") > offsetTime:
+        if time() - os.path.getctime('/'.join(os.getcwd().split('\\')) + '/ffmpeg/audio'+f"/{soundtrack}") > offsetTime:
             os.remove(f"ffmpeg/audio/{soundtrack}")
             logger.info(f"Removed ffmpeg/audio/{soundtrack}")
     logger.info(f"Cleanup finished...")

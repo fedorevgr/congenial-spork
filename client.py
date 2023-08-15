@@ -1,7 +1,7 @@
 import logging
 import discord.ext.commands as ds
 import discord
-from tools.info import TOKEN, DeveloperDiscordId
+from tools.info import DeveloperDiscordId
 import tools.tools as computations
 import ffmpeg.player as player
 from database.Interfaces import queue
@@ -9,6 +9,7 @@ from ffmpeg.audioManager import clearCache
 import tools.messagesService as systemMessages
 
 logger = logging.getLogger("discord")
+TOKEN = open("TOKEN.txt", "r").read()
 bot = ds.Bot(owner_id=DeveloperDiscordId, command_prefix="~", intents=discord.Intents.all())
 db = None
 voiceClient: discord.VoiceClient
@@ -55,8 +56,10 @@ async def stop(message):
 @bot.command()
 async def skip(message):
     global voiceClient
-    voiceClient.stop()
+    voiceClient.pause()
+    player.timer.changeSkip()
     logger.info("Skipped track...")
+
 
 
 @bot.command()
@@ -71,14 +74,16 @@ async def queue(message: discord.Message):
 
 
 @bot.command()
-async def pause(message):
-    voiceClient.pause()
-    player.changePause()
+async def pause(message: discord.Message):
+    if player.timer.changePause():
+        voiceClient.pause()
+        # await message.reply(f"Поcтавил на паузу")
+        logger.info("Paused song.")
+    else:
+        voiceClient.resume()
+        # await message.reply(f"Продолжаю проигрывание")
+        logger.info("Resumed song.")
 
-
-#@bot.event
-#async def on_message(msg: discord.Message):
-#    await msg.delete(delay=1)
 
 
 

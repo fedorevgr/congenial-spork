@@ -13,6 +13,7 @@ def logOnStartUp(botName):
     logger.info(f"discord.py API version: {discord.__version__}")
     logger.info(f"Python version: {platform.python_version()}")
     logger.info(f"Running on: {platform.system()} {platform.release()} ({os.name})")
+    logger.info(f"Working directory: "+ '/'.join(os.getcwd().split('\\')))
     logger.info("-------------------")
 
 
