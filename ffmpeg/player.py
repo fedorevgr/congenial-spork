@@ -1,17 +1,23 @@
 import discord
 from ffmpeg import downloader
 import logging
-from youtubesearchpython import VideosSearch
 from database.Interfaces import queue
 import asyncio
-from time import time
+import tools.tools as computations
+import tools.messagesService as systemMessages
 
 
 logger = logging.getLogger("discord")
+is_paused = False
+
+
+def changePause():
+    global is_paused
+    is_paused = not is_paused
 
 
 async def play(
-        url,
+        urloname,
         client: discord.Client,
         voice_client: discord.VoiceClient,
         Queue: queue.Interface,
@@ -19,42 +25,29 @@ async def play(
         repeat=0
         ):
     async with msg.channel.typing():
-        if not url.startswith("https"):
-            name = url
-            url, name = getUrl(url), getName(url)
-        else:
-            name = getName(url)
+        name, url = computations.assignNameUrl(urloname)
 
         filename = await downloader.YTDLSource.from_url(url=url, loop=client.loop)
         # file downloaded put in queue
         logger.info(f'Downloaded file - {filename}')
 
-        for _ in range(repeat+1):
-            Queue.addSong(name=name, url=url, duration=getDuration(url), systemName=filename)
+        Queue.addSong(name=name, url=url, duration=computations.getDuration(url), systemName=filename, amount=repeat)
 
-        logger.info(f'Song "{name}" is added to queue.')
-        message = f"Добавил die Musik -------  {name}  ({Queue[0].duration // 60}:{Queue[0].duration % 60})"
-        await msg.reply(message)
+        await systemMessages.onAdditionOfSong(msg=msg,  name=name, elem=Queue[-1])
 
-        if len(Queue) > 1:
+        if len(Queue) > 1 and len(Queue) - repeat > 1:
             logger.info(f"Song is added to the queue, but not played yet\nQueue:\n{Queue.getSTR()}")
             return
 
     while Queue:
         elem = Queue[0]
+
         logger.info(f"Now playing - {elem.name}\n{elem.path}\n{Queue.getSTR()}")
-        filename = elem.path
-        file = (discord.FFmpegPCMAudio(executable="ffmpeg/ffmpeg.exe", source=filename))
+
+        file = (discord.FFmpegPCMAudio(executable="ffmpeg/ffmpeg.exe", source=elem.path))
         voice_client.play(file)
 
-        embed = discord.Embed(
-            url=elem.url,
-            title=f"Сейчас играет - {name}",
-            description=f"{elem.duration // 60}:{elem.duration % 60}",
-            colour=discord.Colour.random(),
-        )
-        embed.set_image(url=getThumbnailUrl(elem.url))
-        await msg.channel.send(embed=embed)
+        await systemMessages.onCurrSong(msg=msg, elem=elem)
 
         while True:
             await asyncio.sleep(1)
@@ -65,31 +58,4 @@ async def play(
         logger.info(f"Ended - {elem.name}\n{Queue.getSTR()}")
 
     logger.info("Queue ended")
-
-
-def getUrl(fromName: str):
-    videosSearch = VideosSearch(fromName, limit=1)
-    video_info = videosSearch.result()
-    video_url = video_info['result'][0]['link']
-    return video_url
-
-
-def getName(fromUrl):
-    videoSearch = VideosSearch(fromUrl, limit=1)
-    videoInfo = videoSearch.result()
-    return videoInfo["result"][0]["title"]
-
-
-def getDuration(fromUrl):
-    videoSearch = VideosSearch(fromUrl, limit=1)
-    videoInfo = videoSearch.result()
-    res = videoInfo["result"][0]['duration'].split(":")[::-1]
-    return sum([(60**i)*int(value) for i, value in enumerate(res)])
-
-
-def getThumbnailUrl(url):
-    videoSearch = VideosSearch(url, limit=1)
-    videoInfo = videoSearch.result()
-    return videoInfo["result"][0]['thumbnails'][0]["url"]
-
 

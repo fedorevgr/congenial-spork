@@ -3,7 +3,7 @@ from time import time
 import logging
 
 
-offsetTime = 60 * 60 * 24 * 2
+offsetTime = 60 * 60
 logger = logging.getLogger("discord")
 
 

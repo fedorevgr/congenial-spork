@@ -2,12 +2,11 @@ import logging
 import discord.ext.commands as ds
 import discord
 from tools.info import TOKEN, DeveloperDiscordId
-import platform
+import tools.tools as computations
 import ffmpeg.player as player
-import os
 from database.Interfaces import queue
 from ffmpeg.audioManager import clearCache
-
+import tools.messagesService as systemMessages
 
 logger = logging.getLogger("discord")
 bot = ds.Bot(owner_id=DeveloperDiscordId, command_prefix="~", intents=discord.Intents.all())
@@ -18,11 +17,7 @@ songQueue = queue.Interface()
 
 @bot.event
 async def on_ready():
-    logger.info(f"Logged in as {bot.user.name}")
-    logger.info(f"discord.py API version: {discord.__version__}")
-    logger.info(f"Python version: {platform.python_version()}")
-    logger.info(f"Running on: {platform.system()} {platform.release()} ({os.name})")
-    logger.info("-------------------")
+    systemMessages.logOnStartUp(bot.user.name)
     clearCache()
 
 
@@ -38,18 +33,15 @@ async def play(message: discord.Message, *args: str):
     global songQueue
     global logger
     async with message.channel.typing():
-        repeat = 0
-        if args[-1].startswith("repeat="):
-            args, repeat = args[:-1], int(args[-1][7:])
-        elif args[-1].startswith("r="):
-            args, repeat = args[:-1], int(args[-1][2:])
-        songName = " ".join(args)
+        songName, repeat = computations.assignNameReps(args)
         logger.info(f'Received to play "{songName}", {repeat+1} times')
 
         if not bot.voice_clients:
             await join(message)
 
-    await player.play(url=songName,  client=bot, voice_client=voiceClient, Queue=songQueue, msg=message)
+    await player.play(
+        urloname=songName,  client=bot, voice_client=voiceClient, Queue=songQueue, msg=message, repeat=repeat
+    )
 
 
 @bot.command()
@@ -81,6 +73,13 @@ async def queue(message: discord.Message):
 @bot.command()
 async def pause(message):
     voiceClient.pause()
+    player.changePause()
+
+
+#@bot.event
+#async def on_message(msg: discord.Message):
+#    await msg.delete(delay=1)
+
 
 
 bot.run(token=TOKEN, reconnect=True)
