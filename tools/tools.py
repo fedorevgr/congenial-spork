@@ -15,7 +15,8 @@ def assignNameUrl(url_name):
     url = url_name
     if not url_name.startswith("https"):
         name = url_name
-        url, name = __getUrl(url_name), getName(url_name)
+        url = __getUrl(url_name)
+        name = getName(url_name)
     else:
         name = getName(url_name)
     return name, url

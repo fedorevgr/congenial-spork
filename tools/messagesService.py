@@ -106,3 +106,12 @@ async def onAutoplay(message, songToAutoplay, mode):
         await message.reply(f"Поток по музыке остановлен")
         logger.info(f"\nAutoplay - OFF")
 
+
+def composedList(newQueue):
+    logger.info(f"Autoplay list: {newQueue.getSTR}")
+
+
+async def onResponseFailed(msg):
+    logger.info(f"GPT didn't  respond")
+    await msg.reply(f"GPT гавна покушала")
+

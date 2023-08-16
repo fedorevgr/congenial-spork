@@ -46,6 +46,8 @@ async def play(message: discord.Message, *args: str):
 @bot.command()
 async def stop(message):
     global voiceClient
+    global songQueue
+    songQueue = queue.Interface()
     voiceClient.stop()
     await systemMessages.onStop(message)
     await voiceClient.disconnect()
@@ -87,6 +89,13 @@ async def autoplay(msg: discord.Message):
     global songQueue
     autoplayIsON = player.autoplay.setAutoplay()
     await systemMessages.onAutoplay(message=msg, songToAutoplay=songQueue[0], mode=autoplayIsON)
+    autoplayList = await player.autoplay.composeList(songQueue[0])
+
+    if autoplayList:
+        songQueue.addAutoplayQueue(sequence=autoplayList)
+    else:
+        await systemMessages.onResponseFailed(msg)
+
 
 bot.run(token=TOKEN, reconnect=True)
 

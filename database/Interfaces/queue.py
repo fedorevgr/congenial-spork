@@ -32,5 +32,12 @@ class Interface(Queue):
             for i, song in enumerate(self)
         ]
 
-    def __add__(self, other):
-        self += other
+    def addAutoplayQueue(self, sequence):
+        otherQueue = Interface(self[1:])
+        del self[1:]
+        for elem in sequence:
+            self.append(elem)
+        for elem in otherQueue:
+            self.append(elem)
+
+

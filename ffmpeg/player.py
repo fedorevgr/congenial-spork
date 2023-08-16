@@ -53,5 +53,8 @@ async def play(
 
         systemMessages.onEndOfSong(elem, Queue)
 
+    if autoplay.getAutoplayMode():
+        pass
+
     systemMessages.onEndOfQueue()
 
