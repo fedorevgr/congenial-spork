@@ -82,5 +82,9 @@ async def endless(msg: discord.Message):
     await systemMessages.onEndlessON(msg, songQueue, isSwitchedON)
 
 
+@bot.command()
+async def autoplay(msg: discord.Message):
+    autoplayIsON = player.autoplay.setAutoplay()
+
 bot.run(token=TOKEN, reconnect=True)
 

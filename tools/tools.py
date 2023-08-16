@@ -15,9 +15,9 @@ def assignNameUrl(url_name):
     url = url_name
     if not url_name.startswith("https"):
         name = url_name
-        url, name = __getUrl(url_name), __getName(url_name)
+        url, name = __getUrl(url_name), getName(url_name)
     else:
-        name = __getName(url_name)
+        name = getName(url_name)
     return name, url
 
 
@@ -28,10 +28,11 @@ def __getUrl(fromName: str):
     return video_url
 
 
-def __getName(fromUrl):
+def getName(fromUrl):
     videoSearch = VideosSearch(fromUrl, limit=1)
     videoInfo = videoSearch.result()
     return videoInfo["result"][0]["title"]
+
 
 def getDuration(fromUrl):
     videoSearch = VideosSearch(fromUrl, limit=1)

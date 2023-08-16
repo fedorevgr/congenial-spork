@@ -1,15 +1,15 @@
 import discord
 from ffmpeg import downloader
-import logging
 from database.Interfaces import queue
-import asyncio
 import tools.tools as computations
 import tools.messagesService as systemMessages
 from ffmpeg.TimerService import Timer
 from tools.info import ffmpegEXEpath
+from ffmpeg.AutoplayService import AutoplayService
 
 
 timer = Timer()
+autoplay = AutoplayService()
 
 
 async def play(
@@ -20,7 +20,9 @@ async def play(
         msg: discord.Message,
         repeat=0
         ):
+
     global timer
+
     async with msg.channel.typing():
         name, url = computations.assignNameUrl(urloname)
 
