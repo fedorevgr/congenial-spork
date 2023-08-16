@@ -4,7 +4,7 @@ from ffmpeg.downloader import YTDLSource
 
 
 class Interface(Queue):
-    def addSong(self, name: str, url: str, duration: 0, systemName: str, amount: int):
+    def addSong(self, name: str, url: str, duration: 0, systemName: str, amount=0):
         for i in range(amount+1):
             self.append(Song(name=name, url=url, duration=duration, systemName=systemName))
 
@@ -31,3 +31,6 @@ class Interface(Queue):
             }
             for i, song in enumerate(self)
         ]
+
+    def __add__(self, other):
+        self += other

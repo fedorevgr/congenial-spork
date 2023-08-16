@@ -96,3 +96,13 @@ async def onEndlessON(message, Queue, mode):
     else:
         await message.reply(f"{currSong.name} не будет проигрываться бесконечно.")
         logger.info(f"Endless song - OFF: {currSong.name}")
+
+
+async def onAutoplay(message, songToAutoplay, mode):
+    if mode:
+        await message.reply(f"{songToAutoplay.name} поставлена как на поток.")
+        logger.info(f"{songToAutoplay.name} is now on autoplay\nAutoplay - ON")
+    else:
+        await message.reply(f"Поток по музыке остановлен")
+        logger.info(f"\nAutoplay - OFF")
+
