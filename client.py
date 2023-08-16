@@ -1,4 +1,3 @@
-import logging
 import discord.ext.commands as ds
 import discord
 from tools.info import DeveloperDiscordId
@@ -8,7 +7,7 @@ from database.Interfaces import queue
 from ffmpeg.audioManager import clearCache
 import tools.messagesService as systemMessages
 
-logger = logging.getLogger("discord")
+
 TOKEN = open("TOKEN.txt", "r").read()
 bot = ds.Bot(owner_id=DeveloperDiscordId, command_prefix="~", intents=discord.Intents.all())
 db = None
@@ -32,10 +31,9 @@ async def join(message:  discord.Message):
 async def play(message: discord.Message, *args: str):
     global voiceClient
     global songQueue
-    global logger
     async with message.channel.typing():
         songName, repeat = computations.assignNameReps(args)
-        logger.info(f'Received to play "{songName}", {repeat+1} times')
+        systemMessages.onReceiveOfTrack(songName, repeat)
 
         if not bot.voice_clients:
             await join(message)
@@ -49,7 +47,7 @@ async def play(message: discord.Message, *args: str):
 async def stop(message):
     global voiceClient
     voiceClient.stop()
-    logger.info("Stopped playing tracks...")
+    await systemMessages.onStop(message)
     await voiceClient.disconnect()
 
 
@@ -57,32 +55,31 @@ async def stop(message):
 async def skip(message):
     global voiceClient
     voiceClient.pause()
-    player.timer.changeSkip()
-    logger.info("Skipped track...")
-
+    player.timer.switchSkip()
+    await systemMessages.onSkip(message)
 
 
 @bot.command()
 async def queue(message: discord.Message):
     global songQueue
-    embed = discord.Embed(colour=discord.Colour.random(), title="Очередь пуста")
-    if songQueue:
-        content, embed = songQueue.get(), discord.Embed(colour=discord.Colour.random(), title="Очередь:")
-        for song in content[:10]:
-            embed.add_field(name=f'{song["pos"]}.', value=f"{song['name']} ({song['dur']})")
-    await message.channel.send(embed=embed)
+    await message.channel.send(embed=systemMessages.queueMessage(songQueue))
 
 
 @bot.command()
 async def pause(message: discord.Message):
-    if player.timer.changePause():
+    if player.timer.switchPause():
         voiceClient.pause()
-        # await message.reply(f"Поcтавил на паузу")
-        logger.info("Paused song.")
+        await systemMessages.onPause(message)
     else:
         voiceClient.resume()
-        # await message.reply(f"Продолжаю проигрывание")
-        logger.info("Resumed song.")
+        await systemMessages.onUnpause(message)
+
+
+@bot.command()
+async def endless(msg: discord.Message):
+    global songQueue
+    isSwitchedON = player.timer.switchEndless()
+    await systemMessages.onEndlessON(msg, songQueue, isSwitchedON)
 
 
 bot.run(token=TOKEN, reconnect=True)

@@ -9,7 +9,6 @@ from ffmpeg.TimerService import Timer
 from tools.info import ffmpegEXEpath
 
 
-logger = logging.getLogger("discord")
 timer = Timer()
 
 
@@ -26,21 +25,19 @@ async def play(
         name, url = computations.assignNameUrl(urloname)
 
         filename = await downloader.YTDLSource.from_url(url=url, loop=client.loop)
-        # file downloaded put in queue
-        logger.info(f'Downloaded file - {filename}')
+        systemMessages.onDownloadOfTrack(filename)
 
         Queue.addSong(name=name, url=url, duration=computations.getDuration(url), systemName=filename, amount=repeat)
 
         await systemMessages.onAdditionOfSong(msg=msg,  name=name, elem=Queue[-1])
 
         if len(Queue) > 1 and len(Queue) - repeat > 1:
-            logger.info(f"Song is added to the queue, but not played yet\nQueue:\n{Queue.getSTR()}")
-            return
+            return systemMessages.onAdditionToTheQueue(Queue)
 
     while Queue:
         elem = Queue[0]
 
-        logger.info(f"Now playing - {elem.name}\n{elem.path}\n{Queue.getSTR()}")
+        systemMessages.onNowPlaying(elem, Queue)
 
         file = (discord.FFmpegPCMAudio(executable=ffmpegEXEpath, source=elem.path))
         voice_client.play(file)
@@ -49,8 +46,10 @@ async def play(
 
         await timer.startTimer(elem.duration)
 
-        await Queue.skipSong()
-        logger.info(f"Ended - {elem.name}\n{Queue.getSTR()}")
+        if not timer.getEndless():
+            await Queue.skipSong()
 
-    logger.info("Queue ended")
+        systemMessages.onEndOfSong(elem, Queue)
+
+    systemMessages.onEndOfQueue()
 

@@ -2,18 +2,26 @@ import asyncio
 
 
 class Timer:
-    def __init__(self):
+    def __init__(self, endPlay=False):
         self._elapsed = 0
         self._isPaused = False
         self._isSkipped = False
         self._delay = 0.5
         self._duration = 0
+        self._endlessPlay = endPlay
 
-    def changePause(self):
+    def switchEndless(self):
+        self._endlessPlay = not self._endlessPlay
+        return self._endlessPlay
+
+    def getEndless(self):
+        return self._endlessPlay
+
+    def switchPause(self):
         self._isPaused = not self._isPaused
         return self._isPaused
 
-    def changeSkip(self):
+    def switchSkip(self):
         self._isSkipped = not self._isSkipped
 
     async def startTimer(self, duration):
@@ -23,9 +31,10 @@ class Timer:
             if self._isPaused:
                 continue
             if self._isSkipped:
+                self._endlessPlay = False
                 break
             self._elapsed += self._delay
-        self.__init__()
+        self.__init__(self._endlessPlay)
         return
 
     def time(self):
