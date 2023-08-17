@@ -1,3 +1,5 @@
+import asyncio
+
 import discord
 from ffmpeg import downloader
 from database.Interfaces import queue
@@ -54,7 +56,7 @@ async def _play(Queue: queue.Interface, msg: discord.Message, voice_client):
         await systemMessages.onCurrSong(msg=msg, elem=elem)
         await timer.startTimer(elem.duration)
 
-        if not timer.getEndless():
+        if not timer.getEndless() and Queue:
             await Queue.skipSong()
 
         systemMessages.onEndOfSong(elem, Queue)

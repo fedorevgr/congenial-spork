@@ -1,3 +1,5 @@
+import asyncio
+
 import discord.ext.commands as ds
 import discord
 from tools.info import DeveloperDiscordId
@@ -48,12 +50,13 @@ async def play(message: discord.Message, *args: str):
 async def stop(message):
     global voiceClient
     global songQueue
-    songQueue = queue.Interface()
-    player.autoplay.cleanUp()
-    player.timer.cleanUp()
     voiceClient.stop()
     await systemMessages.onStop(message)
     await voiceClient.disconnect()
+
+    songQueue.clear()
+    player.autoplay.cleanUp()
+    player.timer.cleanUp()
 
 
 @bot.command()
