@@ -44,7 +44,6 @@ async def play(
 
 async def _play(Queue: queue.Interface, msg: discord.Message, voice_client):
     elem = Queue[0]
-
     while Queue:
         elem = Queue[0]
         systemMessages.onNowPlaying(elem, Queue)
@@ -61,8 +60,8 @@ async def _play(Queue: queue.Interface, msg: discord.Message, voice_client):
         systemMessages.onEndOfSong(elem, Queue)
 
     if autoplay.getAutoplayMode():
-
-        Queue += await autoplay.AutoplayToQueue(queue.Interface([elem]))
+        preparedQueue = await autoplay.AutoplayToQueue(queue.Interface([elem]))
+        Queue += preparedQueue[1:]
         await systemMessages.onEndOfQueueButAutoplayIsOn(message=msg, songQueue=Queue)
 
         await _play(Queue=Queue, msg=msg, voice_client=voice_client)
