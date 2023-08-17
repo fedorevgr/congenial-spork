@@ -10,7 +10,8 @@ libs = {
     "db": "aiosqlite",
     "help": "pynacl",
     "requests": "requests",
-    "yb": "youtube-search-python"
+    "yb": "youtube-search-python",
+    "gpt": "g4f"
 }
 gpt = "git clone https://github.com/xtekky/gpt4free"
 

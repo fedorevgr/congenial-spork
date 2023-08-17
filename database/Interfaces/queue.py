@@ -4,9 +4,12 @@ from ffmpeg.downloader import YTDLSource
 
 
 class Interface(Queue):
-    def addSong(self, name: str, url: str, duration: 0, systemName: str, amount=0):
-        for i in range(amount+1):
-            self.append(Song(name=name, url=url, duration=duration, systemName=systemName))
+    def addSong(self, name: str, url: str, duration: 0, systemName: str, amount=0, index=0):
+        if index:
+            self.insert(index, Song(name=name, url=url, duration=duration, systemName=systemName))
+        else:
+            for i in range(amount+1):
+                self.append(Song(name=name, url=url, duration=duration, systemName=systemName))
 
     async def deleteSong(self, name: str):
         self.pop([i for i, song in enumerate(self) if song.name == name][0])
@@ -31,13 +34,5 @@ class Interface(Queue):
             }
             for i, song in enumerate(self)
         ]
-
-    def addAutoplayQueue(self, sequence):
-        otherQueue = Interface(self[1:])
-        del self[1:]
-        for elem in sequence:
-            self.append(elem)
-        for elem in otherQueue:
-            self.append(elem)
 
 

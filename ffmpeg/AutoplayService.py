@@ -6,41 +6,56 @@ from ffmpeg import downloader
 import asyncio
 import tools.messagesService as systemMessages
 
+
 class AutoplayService:
     def __init__(self):
         self.__autoPLayIsON = False
 
-    def setAutoplay(self):
-        self.__autoPLayIsON = not self.__autoPLayIsON
-        return self.__autoPLayIsON
+    def setAutoplayMode(self, mode):
+        self.__autoPLayIsON = mode
 
     def getAutoplayMode(self):
         return self.__autoPLayIsON
 
     @classmethod
-    def __prompt(cls, baseMelody: Classes.Song):
+    def __prompt(cls, baseMelody):
         return f"Compose a list of 10 song," \
-               f" which are similar to {baseMelody.name}," \
-               f"they have to share same tones, emotions and etc. Show me a list in this form: position name -  author"
+            f" which are similar {baseMelody}" \
+            f"they have to share same tones, emotions and etc." \
+            f"They don't have to be only from one specific band, author, singer. " \
+            f"Show me a list in this form: position name -  author."
 
-    async def composeList(self, baseMelody: Classes.Song):
+    def getResponse(self, name):
+        response = "".join(ChatCompletion.create(
+            model='gpt-3.5-turbo',
+            messages=[{"role": "user", "content": self.__prompt(name)}],
+            stream=True
+        ))
+        return response
 
-        response = ChatCompletion.create(
-                    model='gpt-3.5-turbo',
-                    messages=[{"role": "user", "content": self.__prompt(baseMelody)}],
-                    stream=True
-                )
-        if response:
-            outputList = queue.Interface()
-            for songName in ("".join(response)).split("\n"):
-                if '"' in songName:
-                    songName = songName[songName.find('"')+1:songName.rfind('"')]
-                    print(songName)
-                    songName, songURL = tools.assignNameUrl(songName)
-                    songFilename, songDuration = await downloader.YTDLSource.from_url(songURL), tools.getDuration(songURL)
+    async def AutoplayToQueue(self, songQueue: queue.Interface, message=None):
+        while True:
+            RAWResponse = self.getResponse(name=songQueue[0].name)
+            systemMessages.onRawResponse("".join(RAWResponse))
+            if RAWResponse:
+                break
+            await asyncio.sleep(1)
 
-                    outputList.addSong(name=songName, duration=songDuration, url=songURL, systemName=songFilename)
-            systemMessages.composedList(outputList)
-            return outputList
+        if RAWResponse == "":
+            self.__autoPLayIsON = False
+            return
         else:
-            return False
+
+            index = 1
+            for line in RAWResponse.split("\n"):
+                name = line[line.find(".")+2:]
+                name, url = tools.assignNameUrl(name)
+                duration, filename = tools.getDuration(url), await downloader.YTDLSource.from_url(url=url)
+                songQueue.addSong(name=name, url=url, duration=duration, systemName=filename, index=index)
+                index += 1
+            self.__autoPLayIsON = True
+
+            return songQueue
+
+    def cleanUp(self):
+        self.__init__()

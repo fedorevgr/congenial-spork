@@ -22,6 +22,7 @@ async def play(
         ):
 
     global timer
+    global autoplay
 
     async with msg.channel.typing():
         name, url = computations.assignNameUrl(urloname)
@@ -36,16 +37,22 @@ async def play(
         if len(Queue) > 1 and len(Queue) - repeat > 1:
             return systemMessages.onAdditionToTheQueue(Queue)
 
+    await _play(Queue=Queue, msg=msg, voice_client=voice_client)
+
+    return
+
+
+async def _play(Queue: queue.Interface, msg: discord.Message, voice_client):
+    elem = Queue[0]
+
     while Queue:
         elem = Queue[0]
-
         systemMessages.onNowPlaying(elem, Queue)
 
         file = (discord.FFmpegPCMAudio(executable=ffmpegEXEpath, source=elem.path))
         voice_client.play(file)
 
         await systemMessages.onCurrSong(msg=msg, elem=elem)
-
         await timer.startTimer(elem.duration)
 
         if not timer.getEndless():
@@ -54,7 +61,10 @@ async def play(
         systemMessages.onEndOfSong(elem, Queue)
 
     if autoplay.getAutoplayMode():
-        pass
 
+        Queue += await autoplay.AutoplayToQueue(queue.Interface([elem]))
+        await systemMessages.onEndOfQueueButAutoplayIsOn(message=msg, songQueue=Queue)
+
+        await _play(Queue=Queue, msg=msg, voice_client=voice_client)
     systemMessages.onEndOfQueue()
-
+    return

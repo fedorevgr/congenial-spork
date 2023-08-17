@@ -98,20 +98,31 @@ async def onEndlessON(message, Queue, mode):
         logger.info(f"Endless song - OFF: {currSong.name}")
 
 
-async def onAutoplay(message, songToAutoplay, mode):
+async def onClientAutoplay(message: discord.Message, mode):
     if mode:
-        await message.reply(f"{songToAutoplay.name} поставлена как на поток.")
-        logger.info(f"{songToAutoplay.name} is now on autoplay\nAutoplay - ON")
+        logger.info(f"Received autoplay")
     else:
-        await message.reply(f"Поток по музыке остановлен")
-        logger.info(f"\nAutoplay - OFF")
+        logger.info(f"Autoplay - OFF")
 
 
-def composedList(newQueue):
-    logger.info(f"Autoplay list: {newQueue.getSTR}")
+async def onEndOfQueueButAutoplayIsOn(message: discord.Message, songQueue):
+    logger.info(f"Queue is ended, but because autoplay is on, queue continues.")
+
+    content, embed = songQueue.get(), discord.Embed(
+        colour=discord.Colour.random(),
+        title="Очередь:",
+        description="Так как включено автопроигрывание, очередь продолжается"
+    )
+    for song in content[:10]:
+        embed.add_field(name=f'{song["pos"]}.', value=f"{song['name']} ({song['dur']})")
+
+    # await message.channel.send()
 
 
-async def onResponseFailed(msg):
-    logger.info(f"GPT didn't  respond")
-    await msg.reply(f"GPT гавна покушала")
+def onRawResponse(response):
+    if response:
+        logger.info(f"GPT response:\n{response}")
+    else:
+        logger.info(f"GPT is shit")
+
 

@@ -18,6 +18,7 @@ songQueue = queue.Interface()
 @bot.event
 async def on_ready():
     systemMessages.logOnStartUp(bot.user.name)
+    player.autoplay.setAutoplayMode(True)
     clearCache()
 
 
@@ -48,6 +49,8 @@ async def stop(message):
     global voiceClient
     global songQueue
     songQueue = queue.Interface()
+    player.autoplay.cleanUp()
+    player.timer.cleanUp()
     voiceClient.stop()
     await systemMessages.onStop(message)
     await voiceClient.disconnect()
@@ -87,14 +90,13 @@ async def endless(msg: discord.Message):
 @bot.command()
 async def autoplay(msg: discord.Message):
     global songQueue
-    autoplayIsON = player.autoplay.setAutoplay()
-    await systemMessages.onAutoplay(message=msg, songToAutoplay=songQueue[0], mode=autoplayIsON)
-    autoplayList = await player.autoplay.composeList(songQueue[0])
-
-    if autoplayList:
-        songQueue.addAutoplayQueue(sequence=autoplayList)
+    if not player.autoplay.getAutoplayMode():
+        await systemMessages.onClientAutoplay(msg, mode=True)
+        await player.autoplay.AutoplayToQueue(songQueue=songQueue, message=msg)
     else:
-        await systemMessages.onResponseFailed(msg)
+        await systemMessages.onClientAutoplay(msg, mode=False)
+        player.autoplay.setAutoplayMode(mode=False)
+        songQueue = songQueue[:1]
 
 
 bot.run(token=TOKEN, reconnect=True)

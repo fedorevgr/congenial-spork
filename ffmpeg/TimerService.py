@@ -39,3 +39,6 @@ class Timer:
 
     def time(self):
         return int(self._elapsed),  self._duration
+
+    def cleanUp(self):
+        self.__init__()
