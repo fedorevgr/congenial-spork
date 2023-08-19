@@ -19,5 +19,8 @@ if __name__ == "__main__":
         mainLogger.info(f"venv is active. {sys.platform}")
     for elem in libs.values():
         os.system(f"pip install {elem}")
+    if "audio" not in os.listdir("ffmpeg"):
+        mainLogger.info(f"Created AUDIO directory in ffmpeg")
+        os.mkdir("ffmpeg/audio")
     mainLogger.info("Everything should work")
 

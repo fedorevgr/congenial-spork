@@ -40,6 +40,7 @@ async def play(message: discord.Message, *args: str):
 
         if not bot.voice_clients:
             await join(message)
+            await systemMessages.onJoinToVoice(voiceClient)
 
     await player.play(
         urloname=songName,  client=bot, voice_client=voiceClient, Queue=songQueue, msg=message, repeat=repeat
@@ -51,12 +52,14 @@ async def stop(message):
     global voiceClient
     global songQueue
     voiceClient.stop()
-    await systemMessages.onStop(message)
-    await voiceClient.disconnect()
 
     songQueue.clear()
     player.autoplay.cleanUp()
     player.timer.cleanUp()
+
+    await systemMessages.onLeave(voiceClient)
+    await systemMessages.onStop(message)
+    await voiceClient.disconnect()
 
 
 @bot.command()
@@ -99,7 +102,8 @@ async def autoplay(msg: discord.Message):
     else:
         await systemMessages.onClientAutoplay(msg, mode=False)
         player.autoplay.setAutoplayMode(mode=False)
-        songQueue = songQueue[:1]
+        if songQueue:
+            songQueue.leaveFirstSong()
 
 
 bot.run(token=TOKEN, reconnect=True)

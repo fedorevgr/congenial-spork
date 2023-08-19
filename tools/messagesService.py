@@ -1,9 +1,11 @@
+import asyncio
+
 import discord
 import logging
 import platform
 import os
 import tools.tools as computations
-
+from tools.info import ffmpegEXEpath
 
 logger = logging.getLogger("discord")
 
@@ -13,7 +15,7 @@ def logOnStartUp(botName):
     logger.info(f"discord.py API version: {discord.__version__}")
     logger.info(f"Python version: {platform.python_version()}")
     logger.info(f"Running on: {platform.system()} {platform.release()} ({os.name})")
-    logger.info(f"Working directory: "+ '/'.join(os.getcwd().split('\\')))
+    logger.info(f"Working directory: " + '/'.join(os.getcwd().split('\\')))
     logger.info("-------------------")
 
 
@@ -126,3 +128,12 @@ def onRawResponse(response):
         logger.info(f"GPT is shit")
 
 
+async def onJoinToVoice(voice_client):
+    file = (discord.FFmpegPCMAudio(executable=ffmpegEXEpath, source="ffmpeg/audioMessages/OnJoin.mp3"))
+    voice_client.play(file)
+    await asyncio.sleep(5)
+
+async def onLeave(voice_client):
+    file = (discord.FFmpegPCMAudio(executable=ffmpegEXEpath, source="ffmpeg/audioMessages/OnLeave.mp3"))
+    voice_client.play(file)
+    await asyncio.sleep(5)

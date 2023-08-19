@@ -35,5 +35,7 @@ class Interface(Queue):
             for i, song in enumerate(self)
         ]
 
+    def leaveFirstSong(self):
+        del self[1:]
 
 
