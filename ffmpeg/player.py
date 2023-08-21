@@ -44,6 +44,10 @@ async def play(
     return
 
 
+async def playWithOutQueueAddition(voice_client: discord.VoiceClient, msg: discord.Message, Queue: queue.Interface):
+    await _play(Queue=Queue, voice_client=voice_client, msg=msg)
+
+
 async def _play(Queue: queue.Interface, msg: discord.Message, voice_client):
     elem = Queue[0]
     while Queue:
@@ -63,9 +67,10 @@ async def _play(Queue: queue.Interface, msg: discord.Message, voice_client):
 
     if autoplay.getAutoplayMode():
         preparedQueue = await autoplay.AutoplayToQueue(queue.Interface([elem]))
-        Queue += preparedQueue[1:]
-        await systemMessages.onEndOfQueueButAutoplayIsOn(message=msg, songQueue=Queue)
+        if preparedQueue:
+            Queue += preparedQueue[1:]
+            await systemMessages.onEndOfQueueButAutoplayIsOn(message=msg, songQueue=Queue)
 
-        await _play(Queue=Queue, msg=msg, voice_client=voice_client)
+            await _play(Queue=Queue, msg=msg, voice_client=voice_client)
     systemMessages.onEndOfQueue()
     return

@@ -1,4 +1,5 @@
 from g4f import ChatCompletion
+from g4f import Provider
 import database.Classes.Classes as Classes
 import database.Interfaces.queue as queue
 from tools import tools
@@ -28,13 +29,14 @@ class AutoplayService:
     def getResponse(self, name):
         response = "".join(ChatCompletion.create(
             model='gpt-3.5-turbo',
+            provider=Provider.GetGpt,
             messages=[{"role": "user", "content": self.__prompt(name)}],
             stream=True
         ))
         return response
 
     async def AutoplayToQueue(self, songQueue: queue.Interface, message=None):
-        while True:
+        for i in range(30):
             RAWResponse = self.getResponse(name=songQueue[0].name)
             systemMessages.onRawResponse("".join(RAWResponse))
             if RAWResponse:

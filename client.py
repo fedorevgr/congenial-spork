@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 import discord.ext.commands as ds
 import discord
@@ -8,6 +9,7 @@ import ffmpeg.player as player
 from database.Interfaces import queue
 from ffmpeg.audioManager import clearCache
 import tools.messagesService as systemMessages
+from discord import app_commands
 
 
 TOKEN = open("TOKEN.txt", "r").read()
@@ -15,12 +17,15 @@ bot = ds.Bot(owner_id=DeveloperDiscordId, command_prefix="~", intents=discord.In
 db = None
 voiceClient: discord.VoiceClient
 songQueue = queue.Interface()
+logger = logging.getLogger("discord")
 
 
 @bot.event
 async def on_ready():
-    systemMessages.logOnStartUp(bot.user.name)
+    systemMessages.logOnStartUp(bot)
     player.autoplay.setAutoplayMode(True)
+    c = await bot.tree.sync()
+
     clearCache()
 
 
@@ -28,23 +33,7 @@ async def on_ready():
 async def join(message:  discord.Message):
     global voiceClient
     voiceClient = await message.author.voice.channel.connect()
-
-
-@bot.command()
-async def play(message: discord.Message, *args: str):
-    global voiceClient
-    global songQueue
-    async with message.channel.typing():
-        songName, repeat = computations.assignNameReps(args)
-        systemMessages.onReceiveOfTrack(songName, repeat)
-
-        if not bot.voice_clients:
-            await join(message)
-            await systemMessages.onJoinToVoice(voiceClient)
-
-    await player.play(
-        urloname=songName,  client=bot, voice_client=voiceClient, Queue=songQueue, msg=message, repeat=repeat
-    )
+    await systemMessages.onJoinToVoice(voiceClient)
 
 
 @bot.command()
@@ -105,6 +94,26 @@ async def autoplay(msg: discord.Message):
         if songQueue:
             songQueue.leaveFirstSong()
 
+
+@bot.hybrid_command()
+async def play(message: discord.Message, track: str = "", repetitions: float = 0.0):
+    global voiceClient
+    global songQueue
+    if track:
+        if repetitions == float("inf"):
+            isSwitchedON = player.timer.switchEndless()
+        else:
+            repetitions = int(repetitions) if repetitions >= 0 else -int(repetitions)
+        await message.reply(f"Добавил музычки: {track}")
+        if not bot.voice_clients:
+            await join(message)
+
+        await player.play(
+            urloname=track, client=bot, voice_client=voiceClient, Queue=songQueue, msg=message, repeat=repetitions
+        )
+    else:
+        await message.reply(f"Да, играю я уже успокойся...")
+        await player.playWithOutQueueAddition(voice_client=voiceClient, Queue=songQueue, msg=message)
 
 bot.run(token=TOKEN, reconnect=True)
 

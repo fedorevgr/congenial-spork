@@ -6,12 +6,14 @@ import platform
 import os
 import tools.tools as computations
 from tools.info import ffmpegEXEpath
+from random import choice
 
 logger = logging.getLogger("discord")
 
 
-def logOnStartUp(botName):
-    logger.info(f"Logged in as {botName}")
+def logOnStartUp(bot):
+    logger.info(f"Logged in as {bot.user.name}")
+    logger.info(f"Logged on servers:\n{' '.join(str(e.name)+': '+str(e.id) for e in bot.guilds)}")
     logger.info(f"discord.py API version: {discord.__version__}")
     logger.info(f"Python version: {platform.python_version()}")
     logger.info(f"Running on: {platform.system()} {platform.release()} ({os.name})")
@@ -21,8 +23,6 @@ def logOnStartUp(botName):
 
 async def onAdditionOfSong(msg, name, elem):
     logger.info(f'Song "{name}" is added to queue.')
-    message = f"Добавил die Musik -------  {name}  ({elem.duration // 60}:{str(elem.duration % 60).rjust(2, '0')})"
-    await msg.reply(message)
 
 
 async def onCurrSong(msg, elem):
@@ -129,11 +129,14 @@ def onRawResponse(response):
 
 
 async def onJoinToVoice(voice_client):
-    file = (discord.FFmpegPCMAudio(executable=ffmpegEXEpath, source="ffmpeg/audioMessages/OnJoin.mp3"))
+    directory = f"ffmpeg/audioMessages/OnJoin/{choice(os.listdir('ffmpeg/audioMessages/OnJoin'))}"
+    file = (discord.FFmpegPCMAudio(executable=ffmpegEXEpath, source=directory))
     voice_client.play(file)
     await asyncio.sleep(5)
 
+
 async def onLeave(voice_client):
-    file = (discord.FFmpegPCMAudio(executable=ffmpegEXEpath, source="ffmpeg/audioMessages/OnLeave.mp3"))
+    directory = f"ffmpeg/audioMessages/OnLeave/{choice(os.listdir('ffmpeg/audioMessages/OnLeave'))}"
+    file = (discord.FFmpegPCMAudio(executable=ffmpegEXEpath, source=directory))
     voice_client.play(file)
     await asyncio.sleep(5)
