@@ -21,10 +21,6 @@ def logOnStartUp(bot):
     logger.info("-------------------")
 
 
-async def onAdditionOfSong(msg, name, elem):
-    logger.info(f'Song "{name}" is added to queue.')
-
-
 async def onCurrSong(msg, elem):
     embed = discord.Embed(
         url=elem.url,

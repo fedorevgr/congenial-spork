@@ -1,6 +1,8 @@
 import asyncio
+import logging
 
 import discord
+from discord.ext.commands.context import Context
 from ffmpeg import downloader
 from database.Interfaces import queue
 import tools.tools as computations
@@ -8,10 +10,12 @@ import tools.messagesService as systemMessages
 from ffmpeg.TimerService import Timer
 from tools.info import ffmpegEXEpath
 from ffmpeg.AutoplayService import AutoplayService
+from tools.embeds import *
 
 
 timer = Timer()
 autoplay = AutoplayService()
+logger = logging.getLogger("discord")
 
 
 async def play(
@@ -19,27 +23,29 @@ async def play(
         client: discord.Client,
         voice_client: discord.VoiceClient,
         Queue: queue.Interface,
-        msg: discord.Message,
+        context: Context,
         repeat=0
         ):
 
     global timer
     global autoplay
 
-    async with msg.channel.typing():
+    async with context.channel.typing():
         name, url = computations.assignNameUrl(urloname)
+        duration = computations.getDuration(url)
 
         filename = await downloader.YTDLSource.from_url(url=url, loop=client.loop)
         systemMessages.onDownloadOfTrack(filename)
 
-        Queue.addSong(name=name, url=url, duration=computations.getDuration(url), systemName=filename, amount=repeat)
+        Queue.addSong(name=name, url=url, duration=duration, systemName=filename, amount=repeat)
 
-        await systemMessages.onAdditionOfSong(msg=msg,  name=name, elem=Queue[-1])
+        logger.info(f'Track "{name}", added to queue.')
+        await context.reply(embed=ReceiveToQueue(songName=name, duration=duration, url=url))
 
         if len(Queue) > 1 and len(Queue) - repeat > 1:
             return systemMessages.onAdditionToTheQueue(Queue)
 
-    await _play(Queue=Queue, msg=msg, voice_client=voice_client)
+    await _play(Queue=Queue, msg=context.message, voice_client=voice_client)
 
     return
 

@@ -1,15 +1,16 @@
 import asyncio
+import datetime
 import logging
 
 import discord.ext.commands as ds
 import discord
 from tools.info import DeveloperDiscordId
-import tools.tools as computations
+from discord.ext.commands.context import Context
 import ffmpeg.player as player
 from database.Interfaces import queue
 from ffmpeg.audioManager import clearCache
 import tools.messagesService as systemMessages
-from discord import app_commands
+from tools import embeds
 
 
 TOKEN = open("TOKEN.txt", "r").read()
@@ -29,7 +30,6 @@ async def on_ready():
     clearCache()
 
 
-@bot.command()
 async def join(message:  discord.Message):
     global voiceClient
     voiceClient = await message.author.voice.channel.connect()
@@ -96,7 +96,7 @@ async def autoplay(msg: discord.Message):
 
 
 @bot.hybrid_command()
-async def play(message: discord.Message, track: str = "", repetitions: float = 0.0):
+async def play(context: Context, track: str = "", repetitions: float = 0.0):
     global voiceClient
     global songQueue
     if track:
@@ -104,16 +104,31 @@ async def play(message: discord.Message, track: str = "", repetitions: float = 0
             isSwitchedON = player.timer.switchEndless()
         else:
             repetitions = int(repetitions) if repetitions >= 0 else -int(repetitions)
-        await message.reply(f"Добавил музычки: {track}")
+
+        await context.reply(f"Добавил музычки: {track}")
         if not bot.voice_clients:
-            await join(message)
+            await join(message=context.message)
 
         await player.play(
-            urloname=track, client=bot, voice_client=voiceClient, Queue=songQueue, msg=message, repeat=repetitions
+            urloname=track,
+            client=bot,
+            voice_client=voiceClient,
+            Queue=songQueue,
+            msg=context.message,
+            repeat=repetitions
         )
     else:
-        await message.reply(f"Да, играю я уже успокойся...")
-        await player.playWithOutQueueAddition(voice_client=voiceClient, Queue=songQueue, msg=message)
+        # await context.reply(f"Да, играю я уже успокойся...")
+        await player.playWithOutQueueAddition(
+            voice_client=voiceClient,
+            Queue=songQueue,
+            context=context
+        )
+
+
+@bot.hybrid_command()
+async def test(context: discord.ext.commands.Context, data: str = ""):
+    await context.reply(embed=embeds.TestEmbed())
 
 bot.run(token=TOKEN, reconnect=True)
 
