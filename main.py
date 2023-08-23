@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 
-from tools.info import *
+from TOOLS.info import *
 
 if __name__ == "__main__":
     mainLogger = logging.getLogger("Main")

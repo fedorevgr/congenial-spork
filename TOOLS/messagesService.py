@@ -4,8 +4,8 @@ import discord
 import logging
 import platform
 import os
-import tools.tools as computations
-from tools.info import ffmpegEXEpath
+import TOOLS.tools as computations
+from TOOLS.info import ffmpegEXEpath
 from random import choice
 
 logger = logging.getLogger("discord")
@@ -21,17 +21,6 @@ def logOnStartUp(bot):
     logger.info("-------------------")
 
 
-async def onCurrSong(msg, elem):
-    embed = discord.Embed(
-        url=elem.url,
-        title=f"Сейчас играет - {elem.name}",
-        description=f"{elem.duration // 60}:{str(elem.duration % 60).rjust(2, '0')}",
-        colour=discord.Colour.random(),
-    )
-    embed.set_image(url=computations.getThumbnailUrl(elem.url))
-    await msg.channel.send(embed=embed)
-
-
 def onNowPlaying(elem, Queue):
     logger.info(f"Now playing - {elem.name}\n{elem.path}\n{Queue.getSTR()}")
 
@@ -42,7 +31,6 @@ def onEndOfSong(elem, Queue):
 
 def onAdditionToTheQueue(Queue):
     logger.info(f"Song is added to the queue, but not played yet\nQueue:\n{Queue.getSTR()}")
-    return
 
 
 def onDownloadOfTrack(filename):
@@ -57,16 +45,14 @@ def onReceiveOfTrack(name, reps):
     logger.info(f'Received to play "{name}", {reps+ 1} times')
 
 
-async def onSkip(message):
-    await message.reply(f"Пропустил песню.")
+def onSkip():
     logger.info("Skipped track...")
 
 
-async def onStop(message):
-    await message.channel.send(f"ББ")
+def onStop():
     logger.info("Stopped playing tracks...")
 
-
+# add to embed
 def queueMessage(songQueue):
     embed = discord.Embed(colour=discord.Colour.random(), title="Очередь пуста")
     if songQueue:
@@ -76,13 +62,11 @@ def queueMessage(songQueue):
     return embed
 
 
-async def onPause(message):
-    await message.reply(f"Поcтавил на паузу")
+def onPause():
     logger.info("Paused song.")
 
 
-async def onUnpause(message):
-    await message.reply(f"Продолжаю проигрывание")
+async def onUnpause():
     logger.info("Resumed song.")
 
 
@@ -96,25 +80,15 @@ async def onEndlessON(message, Queue, mode):
         logger.info(f"Endless song - OFF: {currSong.name}")
 
 
-async def onClientAutoplay(message: discord.Message, mode):
+def onClientAutoplay(mode):
     if mode:
         logger.info(f"Received autoplay")
     else:
         logger.info(f"Autoplay - OFF")
 
 
-async def onEndOfQueueButAutoplayIsOn(message: discord.Message, songQueue):
+async def onEndOfQueueButAutoplayIsOn(songQueue):
     logger.info(f"Queue is ended, but because autoplay is on, queue continues.")
-
-    content, embed = songQueue.get(), discord.Embed(
-        colour=discord.Colour.random(),
-        title="Очередь:",
-        description="Так как включено автопроигрывание, очередь продолжается"
-    )
-    for song in content[:10]:
-        embed.add_field(name=f'{song["pos"]}.', value=f"{song['name']} ({song['dur']})")
-
-    # await message.channel.send()
 
 
 def onRawResponse(response):

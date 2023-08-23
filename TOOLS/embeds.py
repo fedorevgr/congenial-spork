@@ -1,7 +1,7 @@
 import discord
 from discord import Embed
 from discord.colour import Colour
-import tools
+import TOOLS.tools as tools
 
 colours = [
     Colour.red(),
@@ -43,7 +43,14 @@ class TestEmbed(discord.Embed):
 class ReceiveToQueue(discord.Embed):
     def __init__(self, songName, duration, url):
         super().__init__(title=songName)
-        self.set_footer(text=duration)
         self.set_author(name="Добавил в очередь:")
-        self.set_image(url=tools.getThumbnailUrl(url))
+        self.set_thumbnail(url=tools.getThumbnailUrl(url))
         self.set_footer(text=f"{duration // 60}:{str(duration % 60).rjust(2, '0')}")
+
+
+class CurrSong(discord.Embed):
+    def __init__(self, song):
+        super().__init__(title=song.name)
+        self.set_author(name="Сейчас играет:")
+        self.set_thumbnail(url=tools.getThumbnailUrl(song.url))
+        self.set_footer(text=f"{song.duration // 60}:{str(song.duration % 60).rjust(2, '0')}")

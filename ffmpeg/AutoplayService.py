@@ -2,10 +2,10 @@ from g4f import ChatCompletion
 from g4f import Provider
 import database.Classes.Classes as Classes
 import database.Interfaces.queue as queue
-from tools import tools
+from TOOLS import tools
 from ffmpeg import downloader
 import asyncio
-import tools.messagesService as systemMessages
+import TOOLS.messagesService as systemMessages
 
 
 class AutoplayService:

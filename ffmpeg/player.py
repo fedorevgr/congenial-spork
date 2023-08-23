@@ -5,12 +5,12 @@ import discord
 from discord.ext.commands.context import Context
 from ffmpeg import downloader
 from database.Interfaces import queue
-import tools.tools as computations
-import tools.messagesService as systemMessages
+import TOOLS.tools as computations
+import TOOLS.messagesService as systemMessages
 from ffmpeg.TimerService import Timer
-from tools.info import ffmpegEXEpath
+from TOOLS.info import ffmpegEXEpath
 from ffmpeg.AutoplayService import AutoplayService
-from tools.embeds import *
+from TOOLS.embeds import *
 
 
 timer = Timer()
@@ -31,16 +31,15 @@ async def play(
     global autoplay
 
     async with context.channel.typing():
-        name, url = computations.assignNameUrl(urloname)
-        duration = computations.getDuration(url)
+        # assign name, url, duration
+        name, url, duration = computations.assignNameUrlDuration(urloname)
 
+        # download file
         filename = await downloader.YTDLSource.from_url(url=url, loop=client.loop)
         systemMessages.onDownloadOfTrack(filename)
 
         Queue.addSong(name=name, url=url, duration=duration, systemName=filename, amount=repeat)
-
         logger.info(f'Track "{name}", added to queue.')
-        await context.reply(embed=ReceiveToQueue(songName=name, duration=duration, url=url))
 
         if len(Queue) > 1 and len(Queue) - repeat > 1:
             return systemMessages.onAdditionToTheQueue(Queue)
@@ -63,7 +62,7 @@ async def _play(Queue: queue.Interface, msg: discord.Message, voice_client):
         file = (discord.FFmpegPCMAudio(executable=ffmpegEXEpath, source=elem.path))
         voice_client.play(file)
 
-        await systemMessages.onCurrSong(msg=msg, elem=elem)
+        await msg.channel.send(embed=CurrSong(elem))
         await timer.startTimer(elem.duration)
 
         if not timer.getEndless() and Queue:

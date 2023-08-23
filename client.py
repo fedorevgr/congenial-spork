@@ -4,13 +4,14 @@ import logging
 
 import discord.ext.commands as ds
 import discord
-from tools.info import DeveloperDiscordId
+from TOOLS.info import DeveloperDiscordId
 from discord.ext.commands.context import Context
 import ffmpeg.player as player
 from database.Interfaces import queue
 from ffmpeg.audioManager import clearCache
-import tools.messagesService as systemMessages
-from tools import embeds
+import TOOLS.messagesService as systemMessages
+from TOOLS import embeds
+import TOOLS.tools as computations
 
 
 TOKEN = open("TOKEN.txt", "r").read()
@@ -24,7 +25,7 @@ logger = logging.getLogger("discord")
 @bot.event
 async def on_ready():
     systemMessages.logOnStartUp(bot)
-    player.autoplay.setAutoplayMode(True)
+    player.autoplay.setAutoplayMode(False)
     c = await bot.tree.sync()
 
     clearCache()
@@ -36,7 +37,7 @@ async def join(message:  discord.Message):
     await systemMessages.onJoinToVoice(voiceClient)
 
 
-@bot.command()
+@bot.hybrid_command()
 async def stop(message):
     global voiceClient
     global songQueue
@@ -46,8 +47,9 @@ async def stop(message):
     player.autoplay.cleanUp()
     player.timer.cleanUp()
 
+    await message.replay("ББ")
     await systemMessages.onLeave(voiceClient)
-    await systemMessages.onStop(message)
+    await systemMessages.onStop()
     await voiceClient.disconnect()
 
 
@@ -56,12 +58,13 @@ async def skip(message):
     global voiceClient
     voiceClient.pause()
     player.timer.switchSkip()
-    await systemMessages.onSkip(message)
+    await systemMessages.onSkip()
 
 
 @bot.command()
 async def queue(message: discord.Message):
     global songQueue
+    # change
     await message.channel.send(embed=systemMessages.queueMessage(songQueue))
 
 
@@ -69,10 +72,10 @@ async def queue(message: discord.Message):
 async def pause(message: discord.Message):
     if player.timer.switchPause():
         voiceClient.pause()
-        await systemMessages.onPause(message)
+        await systemMessages.onPause()
     else:
         voiceClient.resume()
-        await systemMessages.onUnpause(message)
+        await systemMessages.onUnpause()
 
 
 @bot.command()
@@ -86,10 +89,10 @@ async def endless(msg: discord.Message):
 async def autoplay(msg: discord.Message):
     global songQueue
     if not player.autoplay.getAutoplayMode():
-        await systemMessages.onClientAutoplay(msg, mode=True)
+        systemMessages.onClientAutoplay(mode=True)
         await player.autoplay.AutoplayToQueue(songQueue=songQueue, message=msg)
     else:
-        await systemMessages.onClientAutoplay(msg, mode=False)
+        systemMessages.onClientAutoplay(mode=False)
         player.autoplay.setAutoplayMode(mode=False)
         if songQueue:
             songQueue.leaveFirstSong()
@@ -105,7 +108,12 @@ async def play(context: Context, track: str = "", repetitions: float = 0.0):
         else:
             repetitions = int(repetitions) if repetitions >= 0 else -int(repetitions)
 
-        await context.reply(f"Добавил музычки: {track}")
+        #  reply to command  here due to issues
+        name, url, duration = computations.assignNameUrlDuration(track)
+        await context.reply(
+            embed=embeds.ReceiveToQueue(songName=name, duration=duration, url=url)
+        )
+
         if not bot.voice_clients:
             await join(message=context.message)
 
@@ -114,15 +122,15 @@ async def play(context: Context, track: str = "", repetitions: float = 0.0):
             client=bot,
             voice_client=voiceClient,
             Queue=songQueue,
-            msg=context.message,
+            context=context,
             repeat=repetitions
         )
     else:
-        # await context.reply(f"Да, играю я уже успокойся...")
+        await context.reply(f"Да, играю я уже успокойся...")
         await player.playWithOutQueueAddition(
             voice_client=voiceClient,
             Queue=songQueue,
-            context=context
+            msg=context.message
         )
 
 

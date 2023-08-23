@@ -1,17 +1,7 @@
 from youtubesearchpython import VideosSearch
 
 
-def assignNameReps(args):
-    repeat = 0
-    if args[-1].startswith("repeat="):
-        args, repeat = args[:-1], int(args[-1][7:])
-    elif args[-1].startswith("r="):
-        args, repeat = args[:-1], int(args[-1][2:])
-    songName = " ".join(args)
-    return songName, repeat
-
-
-def assignNameUrl(url_name):
+def assignNameUrlDuration(url_name):
     url = url_name
     if not url_name.startswith("https"):
         name = url_name
@@ -19,7 +9,7 @@ def assignNameUrl(url_name):
         name = getName(url_name)
     else:
         name = getName(url_name)
-    return name, url
+    return name, url, getDuration(url)
 
 
 def __getUrl(fromName: str):
